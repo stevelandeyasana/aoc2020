@@ -37,6 +37,7 @@ def run():
 
 answer = run()
 print(answer)
-sys.exit(0)
+if len(sys.argv) > 0:
+    sys.exit(0)
 from aocd import submit
 submit(answer, part="a", day=12, year=2020)

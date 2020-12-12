@@ -2,6 +2,8 @@
 
 from util import *
 
+# OOPS I LOST THIS ONE this is actually problem 10
+
 @attr.s
 class Inst:
     line = attr.ib()
