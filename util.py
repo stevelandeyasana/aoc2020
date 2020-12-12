@@ -93,3 +93,57 @@ class Grid:
             if self[coord] != g2[coord]:
                 return False
         return True
+
+class Vector2: # ints only!
+    def __init__(self, x=None, y=None):
+        if y is None and x is not None:
+            other = x
+            self.x = other.x
+            self.y = other.y
+        elif x is None and y is None:
+            self.x = 0
+            self.y = 0
+        elif x is not None and y is not None:
+            self.x = x
+            self.y = y
+        else:
+            assert False
+
+    @property
+    def manhattan(self):
+        return abs(self.x) + abs(self.y)
+
+    def cw(self, amt=1):
+        val = self
+        for _ in range(0, amt):
+            val = Vector2(-val.y, val.x)
+        return val
+
+    def ccw(self, amt=1):
+        val = self
+        for _ in range(0, amt):
+            val = Vector2(val.y, -val.x)
+        return val
+
+    def __repr__(self):
+        return '<{}, {}>'.format(self.x, self.y)
+
+    def __add__(self, other):
+        return Vector2(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        return Vector2(self.x - other.x, self.y - other.y)
+
+    def __mul__(self, other):
+        if isinstance(other, Vector2):
+            return Vector2(self.x * other.x, self.y * other.y)
+        else:
+            return Vector2(self.x * other, self.y * other)
+
+    def __div__(self, other):
+        if isinstance(other, Vector2):
+            return Vector2(int(self.x / other.x), int(self.y / other.y))
+        else:
+            return Vector2(int(self.x / other), int(self.y / other))
+
+V = Vector2
