@@ -8,14 +8,14 @@ grid = Grid(lines=read_data())
 
 def process_cell(g1, g2, coord):
     deltas = [
-        (-1, -1),
-        (-1, 1),
-        (1, -1),
-        (1, 1),
-        (1, 0),
-        (0, 1),
-        (-1, 0),
-        (0, -1),
+        V(-1, -1),
+        V(-1, 1),
+        V(1, -1),
+        V(1, 1),
+        V(1, 0),
+        V(0, 1),
+        V(-1, 0),
+        V(0, -1),
     ]
     empties = 0
     occs = 0
@@ -31,7 +31,7 @@ def process_cell(g1, g2, coord):
                 occs += 1
                 break
             telescope += 1
-            char = g1.neighbor(coord, (delta[0] * telescope, delta[1] * telescope))
+            char = g1.neighbor(coord, delta * telescope)
     if seat == 'L' and occs == 0:
         g2[coord] = '#'
     elif seat == '#' and occs >= 5:

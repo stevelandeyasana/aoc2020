@@ -35,59 +35,57 @@ def read_multiline_groups(join_str=None):
             yield lines
 
 class Grid:
-    def __init__(self, lines=None, w=None, h=None, cells=None):
+    def __init__(self, lines=None, size=None, cells=None):
         self.cells = {}
-        self.h = 0
+        self.size = V()
         if lines is not None:
             for line in lines:
-                self.w = len(line)
+                self.size.x = len(line)
                 for x in range(0, len(line)):
-                    self.cells[(x, self.h)] = line[x]
-                self.h += 1
-        if w is not None:
-            self.w = w
-        if h is not None:
-            self.h = h
+                    self.cells[V(x, self.size.y)] = line[x]
+                self.size.y += 1
+        if size is not None:
+            self.size = size
         if cells is not None:
             self.cells = cells
 
     def __getitem__(self, k):
+        assert isinstance(k, Vector2)
         return self.cells.get(k, None)
 
     def get(self, x, y):
-        return self[(x, y)]
+        return self[V(x, y)]
 
     def __setitem__(self, k, val):
+        assert isinstance(k, Vector2)
         self.cells[k] = val
     
     def set(self, x, y, val):
-        self.cells[(x, y)] = val
+        self.cells[V(x, y)] = val
 
     def copy(self):
-        return Grid(w=self.w, h=self.h, cells={k: v for k, v in self.cells.items()})
+        return Grid(size=self.size, cells={k: v for k, v in self.cells.items()})
 
     @property
     def coords(self):
-        for y in range(0, self.h):
-            for x in range(0, self.w):
-                yield (x, y)
+        for y in range(0, self.size.y):
+            for x in range(0, self.size.x):
+                yield V(x, y)
 
     def neighbor(self, coord, delta, oops=None):
         if oops is not None:
             d2 = oops
-            coord = (coord, delta)
+            coord = V(coord, delta)
             delta = d2
-        return self.cells.get((coord[0] + delta[0], coord[1] + delta[1]), None)
+        return self.cells.get(coord + delta, None)
 
     def print(self):
-        for y in range(0, self.h):
-            print(''.join([self[(x, y)] for x in range(0, self.w)]))
+        for y in range(0, self.size.y):
+            print(''.join([self[V(x, y)] for x in range(0, self.size.x)]))
         print()
 
     def __eq__(self, g2):
-        if self.w != g2.w:
-            return False
-        if self.h != g2.h:
+        if self.size != g2.size:
             return False
         for coord in self.coords:
             if self[coord] != g2[coord]:
@@ -112,6 +110,12 @@ class Vector2: # ints only!
     @property
     def manhattan(self):
         return abs(self.x) + abs(self.y)
+
+    @property
+    def w(self): return self.x
+
+    @property
+    def h(self): return self.y
 
     def cw(self, amt=1):
         val = self
@@ -145,5 +149,12 @@ class Vector2: # ints only!
             return Vector2(int(self.x / other.x), int(self.y / other.y))
         else:
             return Vector2(int(self.x / other), int(self.y / other))
+
+    def __eq__(self, other):
+        if isinstance(other, Vector2):
+            return self.x == other.x and self.y == other.y
+    
+    def __hash__(self):
+        return hash((self.x, self.y))
 
 V = Vector2
