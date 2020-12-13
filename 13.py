@@ -2,42 +2,36 @@
 
 from util import *
 
-Inst = collections.namedtuple('Inst', ('dir', 'num'))
-instructions = [Inst(line[0], int(line[1:])) for line in read_data()]
+line_iter = read_data()
+ts = int(next(line_iter))
+
+buses = [int(x) for x in next(line_iter).split(',') if x != 'x']
+
+print(ts, buses)
 
 def run():
-    waypoint = V(10, -1)
-    pos = V()
-    N = V(0, -1)
-    E = V(1, 0)
-    S = V(0, 1)
-    W = V(-1, 0)
+    best_delta = ts
+    bus2 = buses[0]
+    amt2 = 1
+    for bus in buses:
+        amt = int(ts / bus)
+        val = amt * bus
+        if val == ts:
+            return bus, amt
+        amt += 1
+        val += bus
+        delta = val - ts
+        if delta < best_delta:
+            best_delta = delta
+            bus2 = bus
+            amt2 = amt
+    return (bus2, amt2)
 
-    for inst in instructions:
-        print(inst)
-        if inst.dir == 'F':
-            pos += waypoint * inst.num
-        elif inst.dir == 'L':
-            waypoint = waypoint.ccw(int(inst.num / 90))
-        elif inst.dir == 'R':
-            waypoint = waypoint.cw(int(inst.num / 90))
-        elif inst.dir == 'N':
-            waypoint += N * inst.num
-        elif inst.dir == 'E':
-            waypoint += E * inst.num
-        elif inst.dir == 'S':
-            waypoint += S * inst.num
-        elif inst.dir == 'W':
-            waypoint += W * inst.num
-        else:
-            assert False
-        print(pos, waypoint)
-        # input()
-    return pos.manhattan
-
-answer = run()
+bus, amt = run()
+wait = bus * amt - ts
+answer = wait * bus
 print(answer)
-if len(sys.argv) > 0:
+if len(sys.argv) > 1:
     sys.exit(0)
 from aocd import submit
-submit(answer, part="a", day=12, year=2020)
+submit(answer, part="b", day=13, year=2020)
