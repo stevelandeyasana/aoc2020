@@ -5,31 +5,36 @@ from util import *
 line_iter = read_data()
 ts = int(next(line_iter))
 
-buses = [int(x) for x in next(line_iter).split(',') if x != 'x']
+@attr.s
+class Bus:
+    offset = attr.ib()
+    num = attr.ib()
+    t = attr.ib()
 
-print(ts, buses)
+values = next(line_iter).split(',')
+buses = [Bus(offset=i, t=0, num=int(x) if x != 'x' else None) for i, x in enumerate(values) if x != 'x']
+
+print(buses)
+
+def check(t, my_buses=buses):
+    for bus in my_buses:
+        actual_t = t + bus.offset
+        if actual_t % bus.num != 0:
+            return False
+    return True
 
 def run():
-    best_delta = ts
-    bus2 = buses[0]
-    amt2 = 1
-    for bus in buses:
-        amt = int(ts / bus)
-        val = amt * bus
-        if val == ts:
-            return bus, amt
-        amt += 1
-        val += bus
-        delta = val - ts
-        if delta < best_delta:
-            best_delta = delta
-            bus2 = bus
-            amt2 = amt
-    return (bus2, amt2)
+    t = 0
+    period = 1
+    for i, bus in enumerate(buses):
+        while not check(t, buses[0:i + 1]):
+            t += period
+        period *= bus.num
+    return t
 
-bus, amt = run()
-wait = bus * amt - ts
-answer = wait * bus
+
+answer = run()
+
 print(answer)
 if len(sys.argv) > 1:
     sys.exit(0)
