@@ -7,9 +7,9 @@ PART = "a"
 g = Grid3(read_data())
 
 def grid_coords(g):
-    for z in range(g.min.z - 2, g.max.z + 2):
-        for x in range(g.min.x - 2, g.max.x + 2):
-            for y in range(g.min.y - 2, g.max.y + 2):
+    for z in range(g.min.z - 1, g.max.z + 2):
+        for x in range(g.min.x - 1, g.max.x + 2):
+            for y in range(g.min.y - 1, g.max.y + 2):
                 yield V3(x, y, z)
 
 

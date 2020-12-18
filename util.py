@@ -53,15 +53,9 @@ class Grid:
         assert isinstance(k, Vector2)
         return self.cells.get(k, None)
 
-    def get(self, x, y):
-        return self[V(x, y)]
-
     def __setitem__(self, k, val):
         assert isinstance(k, Vector2)
         self.cells[k] = val
-    
-    def set(self, x, y, val):
-        self.cells[V(x, y)] = val
 
     def copy(self):
         return Grid(size=self.size, cells={k: v for k, v in self.cells.items()})
@@ -72,11 +66,7 @@ class Grid:
             for x in range(0, self.size.x):
                 yield V(x, y)
 
-    def neighbor(self, coord, delta, oops=None):
-        if oops is not None:
-            d2 = oops
-            coord = V(coord, delta)
-            delta = d2
+    def neighbor(self, coord, delta):
         return self.cells.get(coord + delta, None)
 
     def print(self):
@@ -116,6 +106,12 @@ class Vector2: # ints only!
 
     @property
     def h(self): return self.y
+
+    def min(self, other):
+        return Vector2(min(self.x, other.x), min(self.y, other.y))
+
+    def max(self, other):
+        return Vector2(max(self.x, other.x), max(self.y, other.y))
 
     def cw(self, amt=1):
         val = self
@@ -160,22 +156,16 @@ class Vector2: # ints only!
 V = Vector2
 
 class Vector3: # ints only!
-    def __init__(self, x=None, y=None, z=None):
-        if y is None and x is not None:
-            other = x
-            self.x = other.x
-            self.y = other.y
-            self.z = other.z
-        elif x is None and y is None and z is None:
-            self.x = 0
-            self.y = 0
-            self.z = 0
-        elif x is not None and y is not None and z is not None:
-            self.x = x
-            self.y = y
-            self.z = z
-        else:
-            assert False
+    def __init__(self, x=0, y=0, z=0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def min(self, other):
+        return Vector3(min(self.x, other.x), min(self.y, other.y), min(self.z, other.z))
+
+    def max(self, other):
+        return Vector3(max(self.x, other.x), max(self.y, other.y), max(self.z, other.z))
 
     def __repr__(self):
         return '<{}, {}, {}>'.format(self.x, self.y, self.z)
@@ -214,7 +204,7 @@ class Vector3: # ints only!
                 for z in (-1, 0, 1):
                     if x == 0 and y == 0 and z == 0:
                         continue
-                    yield V3(self.x + x, self.y + y, self.z + z)
+                    yield Vector3(self.x + x, self.y + y, self.z + z)
 
 V3 = Vector3
 
@@ -238,12 +228,8 @@ class Grid3:
         if cells is not None:
             self.cells = cells
         for k in self.cells.keys():
-            self.min.x = min(self.min.x, k.x)
-            self.max.x = max(self.max.x, k.x)
-            self.max.y = min(self.max.y, k.y)
-            self.max.y = max(self.max.y, k.y)
-            self.max.z = min(self.max.z, k.z)
-            self.max.z = max(self.max.z, k.z)
+            self.min = self.min.min(k)
+            self.max = self.max.max(k)
 
     def __getitem__(self, k):
         assert isinstance(k, Vector3)
@@ -254,12 +240,8 @@ class Grid3:
 
     def __setitem__(self, k, val):
         assert isinstance(k, Vector3)
-        self.min.x = min(self.min.x, k.x)
-        self.max.x = max(self.max.x, k.x)
-        self.min.y = min(self.min.y, k.y)
-        self.max.y = max(self.max.y, k.y)
-        self.min.z = min(self.min.z, k.z)
-        self.max.z = max(self.max.z, k.z)
+        self.min = self.min.min(k)
+        self.max = self.max.max(k)
 
         self.cells[k] = val
     
@@ -268,16 +250,11 @@ class Grid3:
 
     def copy(self):
         g2 = Grid3(size=self.size, cells={k: v for k, v in self.cells.items()})
-        g2.min = self.min
-        g2.max = self.max
         return g2
 
     @property
     def coords(self):
         return self.cells.keys()
-        # for y in range(0, self.size.y):
-        #     for x in range(0, self.size.x):
-        #         yield V(x, y)
 
     def neighbor(self, coord, delta):
         return self.cells.get(coord + delta, None)
