@@ -110,12 +110,10 @@ def _eval(expr):
             op = expr[i + 1]
             b = expr[i + 2]
             if op == '+':
-                print(a, op, b)
                 did_change = True
                 expr = expr[0:i] + [a + b] + expr[i+3:]
                 break
             elif op == '-':
-                print(a, op, b)
                 did_change = True
                 expr = expr[0:i] + [a - b] + expr[i+3:]
                 break
@@ -140,7 +138,6 @@ def _eval(expr):
 
 
 def eval3(expr):
-    print(expr)
     nested = []
     list_stack = [nested]
     for c in expr:
@@ -160,6 +157,8 @@ def eval3(expr):
 
 assert eval3(parse2('2 * 3 + (4 * 5)')) == 46
 assert eval3(parse2('((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2')) == 23340
+
+sys.exit(0)
 
 def run2():
     return sum(eval3(parse2(line)) for line in read_data())

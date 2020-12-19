@@ -8,9 +8,12 @@ def numbers_from_file(path):
     with open(path, 'r') as f:
         return [int(line.strip()) for line in f if line.strip()]
 
-def read_data():
+def read_data(path=None):
     if len(sys.argv) > 1:
         with open(sys.argv[1], 'r') as f:
+            yield from f
+    elif path:
+        with open(path, 'r') as f:
             yield from f
     else:
         num = re.match(r'.*[^\d](\d+)[^\d]', sys.argv[0]).group(1)
