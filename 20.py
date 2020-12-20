@@ -194,6 +194,17 @@ class Tile:
     s2 = attr.ib(default=set)
     w = attr.ib(default=set)
     w2 = attr.ib(default=set)
+    
+    def cull(self, vals):
+        return
+        self.n -= vals
+        self.n2 -= vals
+        self.s -= vals
+        self.s2 -= vals
+        self.e -= vals
+        self.e2 -= vals
+        self.w -= vals
+        self.w2 -= vals
 
     @property
     def is_northwest(self):
@@ -202,6 +213,12 @@ class Tile:
         return True
 
     def rotate_cw(self):
+        g2 = Grid(size=self.grid.size)
+        for x in range(self.grid.w):
+            for y in range(self.grid.h):
+                g2[V(self.grid.w - 1 - y, x)] = self.grid[V(x, y)]
+        self.grid = g2
+
         n = self.w
         n2 = self.w2
         e = self.n
@@ -218,6 +235,87 @@ class Tile:
         self.s2 = s2
         self.w = w
         self.w2 = w2
+
+    def flip_horizontal(self):
+        g2 = Grid(size=self.grid.size)
+        for y in range(0, self.grid.h):
+            for x in range(0, self.grid.w):
+                g2[V(self.grid.w - 1 - x, y)] = self.grid[V(x, y)]
+        w = self.e2
+        w2 = self.e
+        e = self.w2
+        e2 = self.w
+        self.w = w
+        self.w2 = w2
+        self.e = e
+        self.e2 = e2
+        self.grid = g2
+
+    def flip_vertical(self):
+        g2 = Grid(size=self.grid.size)
+        for y in range(0, self.grid.h):
+            for x in range(0, self.grid.w):
+                g2[V(x, self.grid.h - 1 - y)] = self.grid[V(x, y)]
+        s = self.n2
+        s2 = self.n
+        n = self.s2
+        n2 = self.s
+        self.s = s
+        self.s2 = s2
+        self.n = n
+        self.n2 = n2
+        self.grid = g2
+
+    # turn e2 into e by flipping and rotating it
+    def shift_e(self, tiles):
+        t_id = self.e2.pop() if self.e2 else self.e.pop()
+        self.e.add(t_id) # let's be optimistic
+        t = tiles[t_id]
+
+        for i in range(4):
+            if t.grid.left_row == self.grid.right_row:
+                return t
+            elif t.grid.left2_row == self.grid.right_row:
+                t.flip_vertical()
+                return t
+            else:
+                t.rotate_cw()
+
+        print(self)
+        print(t)
+        assert False
+
+        return t
+
+    # turn e2 into e by flipping and rotating it
+    def shift_s(self, tiles):
+        t_id = self.s2.pop() if self.s2 else self.s.pop()
+        self.e.add(t_id) # let's be optimistic
+        t = tiles[t_id]
+
+        for i in range(4):
+            if self.grid.bottom_row == t.grid.bottom_row:
+                t.flip_vertical()
+                assert t.e or t.e2
+                return t
+            if self.grid.bottom_row == t.grid.top_row:
+                if not (t.e or t.e2):
+                    t.flip_horizontal()
+                assert t.e or t.e2
+                return t
+            elif self.grid.bottom2_row == t.grid.top_row:
+                t.flip_horizontal()
+                if not (t.e or t.e2):
+                    t.flip_horizontal()
+                return t
+            else:
+                t.rotate_cw()
+
+        print(self)
+        print(t)
+        assert False
+
+        return t
 
     @property
     def num_filled_edges(self):
@@ -255,22 +353,59 @@ class Supergrid:
             t.s2 = self.candidates[t.grid.bottom2_row] - set([t.id])
             t.w2 = self.candidates[t.grid.left2_row] - set([t.id])
             # print(t)
-        print(len(self.tiles))
+        # print(len(self.tiles))
 
         assert 1021 in self.tiles[2053].n
         corners = [t.id for t in self.tiles.values() if t.num_filled_edges == 2]
-        print(corners)
+        # print(corners)
 
         self.multiplied_corners = 1
         for c in corners:
             self.multiplied_corners *= c
 
-        print(self.tiles[corners[0]])
+        # print(self.tiles[corners[0]])
 
         self.nw = self.tiles[corners[0]]
         while not self.nw.is_northwest:
             self.nw.rotate_cw()
         print(self.nw)
+
+        already_matched = set()
+
+        self.result = [[self.nw]]
+        t_last = self.nw
+        match_dir = 'e'
+        while True:
+            t_last.cull(already_matched)
+            already_matched.add(t_last.id)
+            if match_dir == 'e':
+                print(len(self.result[-1]), ",", len(self.result), "E:", t_last.id, t_last.e, t_last.e2)
+                try:
+                    assert len(t_last.e) + len(t_last.e2) == 1
+                except AssertionError as e:
+                    print(self.result[-2][0])
+                    print(t_last)
+                    raise e
+                t_last = t_last.shift_e(self.tiles)
+                self.result[-1].append(t_last)
+                if not t_last.e and not t_last.e2:
+                    match_dir = 's'
+                    print("row", len(self.result), ":", [t.id for t in self.result[-1]])
+                    # typewriter back to beginning
+                    t_last = self.result[-1][0]
+                    self.result.append([])
+            elif match_dir == 's':
+                print(len(self.result[-1]), ",", len(self.result), "S:", t_last.id, t_last.s, t_last.s2)
+                try:
+                    assert len(t_last.s) + len(t_last.s2) == 1
+                except AssertionError:
+                    break
+                match_dir = 'e'
+                t_last = t_last.shift_s(self.tiles)
+                self.result[-1].append(t_last)
+
+        self.result.remove(self.result[-1])
+        print(len(self.result[0]), len(self.result))
 
     def _add_candidates(self):
         for t in self.tiles.values():
