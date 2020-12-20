@@ -20,9 +20,9 @@ def read_data(path=None):
         with open(num + '.txt', 'r') as f:
             yield from f
 
-def read_multiline_groups(join_str=None):
+def read_multiline_groups(join_str=None, path=None):
     lines = []
-    for line in read_data():
+    for line in read_data(path):
         if lines and not line.strip():
             if join_str is not None:
                 yield join_str.join(lines)
