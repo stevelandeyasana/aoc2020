@@ -273,9 +273,9 @@ class Tile:
         t = tiles[t_id]
 
         for i in range(4):
-            if t.grid.left_row == self.grid.right_row:
+            if t.grid.left2_row == self.grid.right_row:
                 return t
-            elif t.grid.left2_row == self.grid.right_row:
+            elif t.grid.left_row == self.grid.right_row:
                 t.flip_vertical()
                 return t
             else:
@@ -294,16 +294,16 @@ class Tile:
         t = tiles[t_id]
 
         for i in range(4):
-            if self.grid.bottom_row == t.grid.bottom_row:
-                t.flip_vertical()
-                assert t.e or t.e2
-                return t
-            if self.grid.bottom_row == t.grid.top_row:
+            # if self.grid.bottom_row == t.grid.bottom_row:
+            #     t.flip_vertical()
+            #     assert t.e or t.e2
+            #     return t
+            if self.grid.bottom2_row == t.grid.top_row:
                 if not (t.e or t.e2):
                     t.flip_horizontal()
                 assert t.e or t.e2
                 return t
-            elif self.grid.bottom2_row == t.grid.top_row:
+            elif self.grid.bottom_row == t.grid.top_row:
                 t.flip_horizontal()
                 if not (t.e or t.e2):
                     t.flip_horizontal()
@@ -379,7 +379,7 @@ class Supergrid:
             t_last.cull(already_matched)
             already_matched.add(t_last.id)
             if match_dir == 'e':
-                print(len(self.result[-1]), ",", len(self.result), "E:", t_last.id, t_last.e, t_last.e2)
+                # print(len(self.result[-1]), ",", len(self.result), "E:", t_last.id, t_last.e, t_last.e2)
                 try:
                     assert len(t_last.e) + len(t_last.e2) == 1
                 except AssertionError as e:
@@ -390,12 +390,12 @@ class Supergrid:
                 self.result[-1].append(t_last)
                 if not t_last.e and not t_last.e2:
                     match_dir = 's'
-                    print("row", len(self.result), ":", [t.id for t in self.result[-1]])
+                    # print("row", len(self.result), ":", [t.id for t in self.result[-1]])
                     # typewriter back to beginning
                     t_last = self.result[-1][0]
                     self.result.append([])
             elif match_dir == 's':
-                print(len(self.result[-1]), ",", len(self.result), "S:", t_last.id, t_last.s, t_last.s2)
+                # print(len(self.result[-1]), ",", len(self.result), "S:", t_last.id, t_last.s, t_last.s2)
                 try:
                     assert len(t_last.s) + len(t_last.s2) == 1
                 except AssertionError:
@@ -406,6 +406,20 @@ class Supergrid:
 
         self.result.remove(self.result[-1])
         print(len(self.result[0]), len(self.result))
+
+        self.char_grid = []
+        for tile_y in range(len(self.result)):
+            for y in range(0 if tile_y == 0 else 1, self.result[0][0].grid.h):
+                chars = []
+                for i, tile in enumerate(self.result[tile_y]):
+                    for x in range(0 if i == 0 else 1, tile.grid.w):
+                        chars.append(tile.grid[V(x, y)])
+                self.char_grid.append(''.join(chars))
+                self.char_grid.append('')
+
+        print('\n'.join(self.char_grid).replace('\n\n', '\n'))
+        with open('20grid.txt', 'w') as f:
+            f.write("\n".join(self.char_grid).replace('\n\n', '\n'))
 
     def _add_candidates(self):
         for t in self.tiles.values():
