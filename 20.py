@@ -368,7 +368,7 @@ class Supergrid:
         self.nw = self.tiles[corners[0]]
         while not self.nw.is_northwest:
             self.nw.rotate_cw()
-        print(self.nw)
+        # print(self.nw)
 
         already_matched = set()
 
@@ -407,24 +407,140 @@ class Supergrid:
         self.result.remove(self.result[-1])
         print(len(self.result[0]), len(self.result))
 
+        for t in self.result[0]:
+            print(t)
+
         self.char_grid = []
         for tile_y in range(len(self.result)):
-            for y in range(0 if tile_y == 0 else 1, self.result[0][0].grid.h):
+            # min_y = 0
+            # if tile_y > 0: min_y += 1
+            # max_y = self.result[0][0].grid.h
+            # if tile_y < len(self.result) - 1: max_y -= 1
+            min_y = 1
+            max_y = self.result[0][0].grid.h - 1    
+
+            for y in range(min_y, max_y):
                 chars = []
                 for i, tile in enumerate(self.result[tile_y]):
-                    for x in range(0 if i == 0 else 1, tile.grid.w):
+                    # min_x = 0
+                    # if i > 0: min_x += 1
+                    # max_x = tile.grid.w
+                    # if i < len(self.result[tile_y]) - 1: max_x -= 1
+                    min_x = 1
+                    max_x = tile.grid.w - 1
+
+                    for x in range(min_x, max_x):
                         chars.append(tile.grid[V(x, y)])
                 self.char_grid.append(''.join(chars))
-                self.char_grid.append('')
 
-        print('\n'.join(self.char_grid).replace('\n\n', '\n'))
+        # print('\n'.join(self.char_grid).replace('\n\n', '\n'))
         with open('20grid.txt', 'w') as f:
             f.write("\n".join(self.char_grid).replace('\n\n', '\n'))
+
+        self._find_sea_monsters()
 
     def _add_candidates(self):
         for t in self.tiles.values():
             for side in t.grid.all_sides:
                 self.candidates[side].add(t.id)
+
+    def _find_sea_monsters(self):
+        
+#         smstrings = [
+#             """                  # 
+# #    ##    ##    ###
+#  #  #  #  #  #  #   
+# """,
+#             """ # 
+#   #
+
+
+#   #
+#  # 
+#  # 
+#   #
+
+
+#   #
+#  # 
+#  # 
+#   #
+
+
+#   #
+#  # 
+# ## 
+#  # """,
+#         ]
+#         for s in [] + smstrings:
+#             s2 = []
+#             for line in s.split('\n'):
+#                 s2.append(''.join(list(reversed(list(line)))))
+#             smstrings.append('\n'.join(s2))
+#         for s in [] + smstrings:
+#             smstrings.append('\n'.join(list(reversed(s.split('\n')))))
+
+        smstring = """   #  #  #  #  #  #
+###    ##    ##    #
+ #"""
+
+        sea_monster_members = set()
+        print(smstring)
+        did_find = False
+        # for ii, smstring in enumerate(smstrings):
+        # print("Test\n" + smstring)
+        x = 0
+        y = 0
+        max_x = 0
+        max_y = 0
+        smcoords = []
+        for char in smstring:
+            if char == '\n':
+                x = 0
+                y += 1
+                max_y = max(max_y, y)
+            else:
+                if char == '#':
+                    smcoords.append((x, y))
+                x += 1
+                max_x = max(max_x, x)
+        # print(max_x, max_y, smcoords)
+        assert len(smcoords) == 15
+
+        num_found = 0
+        for x in range(0, len(self.char_grid[0]) - max_x):
+            for y in range(0, len(self.char_grid) - max_y):
+                do_all_match_here = True
+                s = ''.join([self.char_grid[y + y2][x + x2] for x2, y2 in smcoords])
+                # print(s)
+                if s == '###############':
+                    num_found += 1
+                    did_find = True
+                    for x2, y2 in smcoords:
+                        sea_monster_members.add(V(x + x2, y + y2))
+        print("Found", num_found)
+
+        if not did_find:
+            sys.exit(1)
+
+        for y, line in enumerate(self.char_grid):
+            l2 = []
+            for x, char in enumerate(line):
+                if V(x, y) in sea_monster_members:
+                    l2.append('O')
+                else:
+                    l2.append(char)
+            print(''.join(l2))
+
+        self.roughness = 0
+        r2 = 0
+        for x in range(len(self.char_grid[0])):
+            for y, char in enumerate(self.char_grid[x]):
+                if char == '#':
+                    r2 += 1
+                if V(x, y) not in sea_monster_members and char == '#':
+                    self.roughness += 1
+        print(r2, self.roughness, r2 - num_found * len(smcoords))
 
 
 id_re = re.compile(r'Tile (\d+):')
@@ -432,13 +548,14 @@ def run():
     sg = Supergrid(tiles=[
         Tile(id=int(id_re.match(g[0]).group(1)), grid=Grid(lines=g[1:]))
         for g in read_multiline_groups()])
-    return sg.multiplied_corners
+    return sg.roughness
 
 answer = run()
+assert answer not in {0, 2504, 2300}
 
 PART = "b"
 
-sys.exit(0)
+# sys.exit(0)
 
 
 print(answer)
