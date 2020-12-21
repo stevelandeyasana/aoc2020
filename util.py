@@ -2,6 +2,7 @@ import collections
 import re
 import sys
 import attr
+from pprint import pprint
 from aocd import get_data, submit
 
 def numbers_from_file(path):
