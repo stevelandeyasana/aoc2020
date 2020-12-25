@@ -9,6 +9,12 @@ def numbers_from_file(path):
     with open(path, 'r') as f:
         return [int(line.strip()) for line in f if line.strip()]
 
+def exercise_num_str():
+    return re.match(r'.*[^\d](\d+)[^\d]', sys.argv[0]).group(1)
+
+def exercise_num():
+    return int(exercise_num_str())
+
 def read_data(path=None):
     if len(sys.argv) > 1:
         with open(sys.argv[1], 'r') as f:
@@ -17,8 +23,7 @@ def read_data(path=None):
         with open(path, 'r') as f:
             yield from f
     else:
-        num = re.match(r'.*[^\d](\d+)[^\d]', sys.argv[0]).group(1)
-        with open(num + '.txt', 'r') as f:
+        with open(exercise_num_str() + '.txt', 'r') as f:
             yield from f
 
 def read_multiline_groups(join_str=None, path=None):
